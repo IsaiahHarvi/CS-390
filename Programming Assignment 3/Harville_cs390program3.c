@@ -17,7 +17,8 @@ int bufferSize = 5 * ONE_MB; // 5 MB buffer size
 int read_binf(const char* filename);
 int write_binf(const char* filename, const char* new_filename);
 int text_type(unsigned char* buffer, int dataSize);
-int to_unix(unsigned char* buffer, int* dataSize);
+int to_unix(unsigned char* buffer, int* dataSize, const char* original_filename);
+
 
 int main(int argc, char* argv[]) {
     char filename[256];
@@ -54,8 +55,10 @@ int main(int argc, char* argv[]) {
                 fprintf(stderr, "File %s is NOT text\n", filename);
             } 
             else if (state == 1) {
-                fprintf(stdout,"File is Windows Compliant\n");
-                if (convert) { to_unix(buffer, &data_size); }
+                fprintf(stdout,"File is Windows Compliant, conversion: %d\n", convert);
+                if (convert) { 
+                    to_unix(buffer, &data_size, filename); 
+                }
             }
             else if (state == 2) {
                 fprintf(stdout,"File is Unix Compliant\n");
@@ -111,17 +114,26 @@ int text_type(unsigned char* buffer, int dataSize) {
     return 2; // unix
 }
 
-int to_unix(unsigned char* buffer, int* dataSize) {
+int to_unix(unsigned char* buffer, int* dataSize, const char* original_filename) {
     int j = 0;
     for (int i = 0; i < *dataSize; ++i) {
         if (buffer[i] == '\r' && buffer[i + 1] == '\n') {
-            continue; // Skip carriage return
+            // Skip carriage return '\r' in "\r\n" sequence
+            continue;
         }
         buffer[j++] = buffer[i];
     }
     *dataSize = j;
-    buffer[j] = '\0'; // Null-terminate the modified buffer
-    return 1;
+    buffer[j] = '\0';
+
+    // save converted buffer to new file
+    int write_status = write_binf(original_filename, "converted_unix.txt");
+    if (write_status != 1) {
+        fprintf(stderr, "Failed to write the converted file\n");
+        return 0; // Indicate failure to write file
+    }
+
+    return 1; // Indicate success
 }
 
 int write_binf(const char* filename, const char* new_filename) {
