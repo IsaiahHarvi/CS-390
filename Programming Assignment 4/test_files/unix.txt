@@ -1,0 +1,7 @@
+hello goodbye Once Upon a time there
+was a monster named ogre This is a word
+list that we can store into string type
+there is no puncts in this file and
+there may be up to 1000 words in this
+file Words should be Sorted case less
+Ann bob CAROL
